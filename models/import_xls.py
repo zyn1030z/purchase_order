@@ -12,6 +12,8 @@ class ImportXLS(models.TransientModel):
     xls_file = fields.Binary(string='File Excel', required=True)
 
     def import_xls(self):
+        amount = self.env.context.get('current_id')
+        print('amount', amount)
         try:
             wb = xlrd.open_workbook(file_contents=base64.decodestring(self.xls_file))
         except:
@@ -97,9 +99,8 @@ class ImportXLS(models.TransientModel):
                         val[4] = standard_price
                     product_id_import = self.env['product.product'].search(
                         [('default_code', '=', val[0])]).id
-                    print('test', self.id)
                     self.env['purchase.order.line'].create(
-                        {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': 8,
+                        {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
                          'product_id': product_id_import})
                     self.env.cr.commit()
             elif len(arr_line_error_not_exist_database) != 0 and len(arr_line_error_dvt) == 0 and len(

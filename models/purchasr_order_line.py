@@ -1,10 +1,5 @@
-import base64
 
-import xlrd
-
-from odoo import api
 from odoo import models, fields, api, exceptions, _
-from odoo.exceptions import ValidationError
 
 
 class purchase_order_line(models.Model):
@@ -17,7 +12,8 @@ class purchase_order_line(models.Model):
             'res_model': 'import.xls.wizard',
             'view_mode': 'form',
             'view_type': 'form',
-            'target': 'new'
+            'target': 'new',
+            'context': {'current_id': self.id},
         }
 
     # def _get_template(self):
@@ -28,7 +24,5 @@ class purchase_order_line(models.Model):
     def get_contract_template(self):
         return {
             'type': 'ir.actions.act_url',
-            'name': 'contract',
             'url': 'pur_request/static/xls/imp_donmuahang.xls'
-
         }

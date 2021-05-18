@@ -6,9 +6,23 @@
             <field name="model">purchase.order</field>
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
+                <!--                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='product_id']"-->
+                <!--                       position="before">-->
+                <!--                <xpath expr="//page[@string='Products']" position="after">-->
+                <!--                <xpath expr="/form/notebook/page/field[@name='order_line']" position="before">-->
+                <!--                    &lt;!&ndash;                    <button name="import_xls" string="Import Excel" type="object"/>&ndash;&gt;-->
+                <!--                    <field name='xls_file'/>-->
+                <!--                </xpath>-->
+                <!--                <notebook position="inside">-->
+                <!--                    <page string="test" name="test">-->
+                <!--                        <field name="xls_file"/>-->
+                <!--                    </page>-->
+                <!--                </notebook>-->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']" position="before">
-                    <button name="import_xls" string="Import Excel" type="object" class="oe_highlight"/>
-                    <button name="get_contract_template" string="Sample file" type="object" icon="fa-download"/>
+                        <button name="import_xls" string="Import Excel" type="object" class="oe_highlight"
+                                style="background-color:red;"/>
+                        <button name="get_contract_template" string="Sample file" type="object" icon="fa-download"
+                                style="background-color:blue;"/>
                 </xpath>
             </field>
         </record>
