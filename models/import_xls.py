@@ -88,8 +88,65 @@ class ImportXLS(models.TransientModel):
             listToStr_line_dvt = ' , '.join([str(elem) for elem in arr_line_error_dvt])
             if len(arr_line_error_not_exist_database) == 0 and len(arr_line_error_dvt) == 0 and len(
                     arr_line_error_slsp) == 0:
+                exist_products_in_line = self.env['purchase.order.line'].search([('order_id', '=', amount)])
+                exist_products_in_line_arr = []
+                for pr_in_line in exist_products_in_line:
+                    exist_products_in_line_arr.append(pr_in_line.product_id.default_code)
+                print(exist_products_in_line_arr)
                 for val in values[6:]:
-                    if not val[4]:
+                    product_id_import = self.env['product.product'].search(
+                        [('default_code', '=', val[0])]).id
+                    # if not val[4]:
+                    #     # lấy đơn giá rồi gán vào val[4]
+                    #     product_id_import_standard = self.env['product.product'].search(
+                    #         [('default_code', '=', val[0])]).product_tmpl_id.id
+                    #     standard_price = self.env['product.template'].search(
+                    #         [('id', '=', product_id_import_standard)]
+                    #     ).standard_price
+                    #     val[4] = standard_price
+                    if len(exist_products_in_line_arr) != 0:
+                        for pr in exist_products_in_line_arr:
+                            # th1 : trùng mã code, không có giá trị đơn giá, đơn giá trên bảng chi tiết tạo tự động  ----> gộp
+                            if val[0] == pr:
+                                print('trùng mã code, không có giá trị đơn giá, đơn giá trên bảng chi tiết tạo tự động')
+                                print(self.env['product.product'].search(
+                                    [('default_code', '=', val[0])]).id)
+                                id_product_exist = self.env['product.product'].search(
+                                    [('default_code', '=', val[0])]).id
+                                # số record bản ghi trùng nhau
+                                rc_purchase_order_line_exist_list = self.env['purchase.order.line'].search(
+                                    [('product_id', '=', id_product_exist), ('order_id', '=', amount)])
+                                product_id_import_standard = self.env['product.product'].search(
+                                    [('default_code', '=', val[0])]).product_tmpl_id.id
+                                standard_price = self.env['product.template'].search(
+                                    [('id', '=', product_id_import_standard)]
+                                ).standard_price
+                                for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
+                                    if not val[4]:
+                                        # kiểm tra xem đơn giá trên bảng chi tiết có mặc định không
+                                        if rc_purchase_order_line_exist.price_unit == standard_price:
+                                            product_quanty = rc_purchase_order_line_exist.product_qty + float(val[3])
+                                            rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                        else:
+                                            # th2 : trùng mã code, không có giá trị đơn giá, đơn giá trên bảng chi tiết chỉnh sửa  ---->  không gộp
+                                            val[4] = standard_price
+                                            self.env['purchase.order.line'].create(
+                                                {'price_unit': float(val[4]), 'product_qty': float(val[3]),
+                                                 'order_id': amount,
+                                                 'product_id': product_id_import})
+                                            self.env.cr.commit()
+                                    elif float(val[4]) == rc_purchase_order_line_exist.price_unit:
+                                        product_quanty = rc_purchase_order_line_exist.product_qty + float(val[3])
+                                        rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                    else:
+                                        print('test1')
+                                        self.env['purchase.order.line'].create(
+                                            {'price_unit': float(val[4]), 'product_qty': float(val[3]),
+                                             'order_id': amount,
+                                             'product_id': product_id_import})
+                                        self.env.cr.commit()
+
+                    elif not val[4]:
                         # lấy đơn giá rồi gán vào val[4]
                         product_id_import_standard = self.env['product.product'].search(
                             [('default_code', '=', val[0])]).product_tmpl_id.id
@@ -97,12 +154,25 @@ class ImportXLS(models.TransientModel):
                             [('id', '=', product_id_import_standard)]
                         ).standard_price
                         val[4] = standard_price
-                    product_id_import = self.env['product.product'].search(
-                        [('default_code', '=', val[0])]).id
-                    self.env['purchase.order.line'].create(
-                        {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
-                         'product_id': product_id_import})
-                    self.env.cr.commit()
+                        self.env['purchase.order.line'].create(
+                            {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
+                             'product_id': product_id_import})
+                        self.env.cr.commit()
+                    else:
+                        print('test2')
+                        self.env['purchase.order.line'].create(
+                            {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
+                             'product_id': product_id_import})
+                        self.env.cr.commit()
+                    # th1 : trùng mã code, không có giá trị đơn giá, đơn giá trên bảng chi tiết tạo tự động  ----> gộp
+                    # th2 : trùng mã code, không có giá trị đơn giá, đơn giá trên bảng chi tiết chỉnh sửa  ---->  không gộp
+                    # th3 : trùng mã code, đơn giá khác nhau giữa file excel và trên bảng chi tiết ---> không gộp
+
+                    # self.env['purchase.order.line'].create(
+                    #     {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
+                    #      'product_id': product_id_import})
+                    # self.env.cr.commit()
+
             elif len(arr_line_error_not_exist_database) != 0 and len(arr_line_error_dvt) == 0 and len(
                     arr_line_error_slsp) == 0:
                 raise ValidationError(
