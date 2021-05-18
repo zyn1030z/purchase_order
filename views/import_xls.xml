@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="your_wizard_form" model="ir.ui.view">
+            <field name="name">your.wizard.form</field>
+            <field name="model">import.xls.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Import a csv file">
+                    <group name="main">
+                        <field name="xls_file"/>
+                    </group>
+
+                    <footer>
+                        <button name="import_xls" type="object"
+                                string="Import" class="oe_highlight"/>
+                        <button special="cancel" string="Cancel"/>
+                    </footer>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="your_wizard_action" model="ir.actions.act_window">
+            <field name="name">Import Detail Purchase Request</field>
+            <field name="res_model">import.xls.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="your_wizard_menu"
+                  parent="purchase.menu_procurement_management"
+                  action="your_wizard_action"
+                  sequence="1"/>
+    </data>
+</odoo>
