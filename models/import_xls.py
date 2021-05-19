@@ -8,7 +8,6 @@ from odoo.exceptions import ValidationError
 
 class ImportXLS(models.TransientModel):
     _name = 'import.xls.wizard'
-    # your file will be stored here:
     xls_file = fields.Binary(string='File Excel', required=True)
 
     def check_exist_product_in_database(self, values):
