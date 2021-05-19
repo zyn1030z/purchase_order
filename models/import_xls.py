@@ -60,6 +60,13 @@ class ImportXLS(models.TransientModel):
              'product_id': product_id_import, 'product_uom': product_uom})
         self.env.cr.commit()
 
+    def check_dvt(self, val):
+        product = self.env['product.template'].search([('default_code', '=', val[0])]).categ_id.id
+        uom = self.env['uom.uom'].search([('name', '=', val[2])]).category_id.id
+        if product != uom:
+            return False
+        return True
+
     def import_xls(self):
         amount = self.env.context.get('current_id')
         try:
@@ -110,8 +117,10 @@ class ImportXLS(models.TransientModel):
                     # lấy mã id sản phẩm muốn import
                     product_id_import = self.env['product.product'].search(
                         [('default_code', '=', val[0])]).id
-                    uom_unit = val[2]
-                    print('uom_unit', uom_unit)
+                    if self.check_dvt(val) is False:
+                        raise ValidationError(
+                            'Đơn vị tính của sản phẩm phải cùng nhóm đơn vị tính đã khai báo')
+                    uom_current = self.env['uom.uom'].search([('name', '=', val[2])]).id
                     if len(arr) != 0:
                         # kiểm tra xem mã code trong file exel tồn tại trong bảng chi tiết không
                         if val[0] in arr:
@@ -127,16 +136,24 @@ class ImportXLS(models.TransientModel):
                             price_unit_arr_exist = []
                             for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
                                 price_unit_arr_exist.append(rc_purchase_order_line_exist.price_unit)
+                            uom_unit_arr = []
+                            for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
+                                uom_unit_arr.append(rc_purchase_order_line_exist.product_uom.id)
+                            print('uom_unit_arr', uom_unit_arr)
                             if not val[4]:
                                 if standard_price in price_unit_arr_exist:
+                                    if uom_current in uom_unit_arr:
                                     # có tồn tại, tìm dòng đó và ghi đè
-                                    for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
-                                        if rc_purchase_order_line_exist.price_unit == standard_price:
-                                            product_quanty = rc_purchase_order_line_exist.product_qty + float(
-                                                val[3])
-                                            rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                        for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
+                                            if rc_purchase_order_line_exist.price_unit == standard_price:
+                                                product_quanty = rc_purchase_order_line_exist.product_qty + float(
+                                                    val[3])
+                                                rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                    else:
+                                        self.create_product(val, standard_price, amount, uom_current)
+
                                 else:
-                                    self.create_product(val, standard_price, amount, 2)
+                                    self.create_product(val, standard_price, amount, uom_current)
 
                             elif float(val[4]) in price_unit_arr_exist:
                                 for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
@@ -155,11 +172,11 @@ class ImportXLS(models.TransientModel):
                                 standard_price = self.env['product.template'].search(
                                     [('id', '=', product_id_import_standard)]
                                 ).standard_price
-                                self.create_product(val, standard_price, amount, 2)
+                                self.create_product(val, standard_price, amount, uom_current)
 
                             else:
                                 print('test5')
-                                self.create_product(val, float(val[4]), amount, 2)
+                                self.create_product(val, float(val[4]), amount, uom_current)
                     elif not val[4]:
                         # lấy đơn giá rồi gán vào val[4]
                         product_id_import_standard = self.env['product.product'].search(
@@ -167,10 +184,10 @@ class ImportXLS(models.TransientModel):
                         standard_price = self.env['product.template'].search(
                             [('id', '=', product_id_import_standard)]
                         ).standard_price
-                        self.create_product(val, standard_price, amount, 2)
+                        self.create_product(val, standard_price, amount, uom_current)
                     else:
                         print('test5')
-                        self.create_product(val, float(val[4]), amount, 2)
+                        self.create_product(val, float(val[4]), amount, uom_current)
 
             elif len(arr_line_error_not_exist_database) != 0 and len(arr_line_error_dvt) == 0 and len(
                     arr_line_error_slsp) == 0:
