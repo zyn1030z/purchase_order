@@ -98,7 +98,7 @@ class ImportXLS(models.TransientModel):
                 for r in exist_products_in_line_arr:
                     if r not in arr:
                         arr.append(r)
-
+                print(arr)
                 for val in values[6:]:
                     # lấy mã id sản phẩm muốn import
                     product_id_import = self.env['product.product'].search(
@@ -178,6 +178,24 @@ class ImportXLS(models.TransientModel):
                             #         {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
                             #          'product_id': product_id_import})
                             #     self.env.cr.commit()
+                        else:
+                            if not val[4]:
+                            # lấy đơn giá rồi gán vào val[4]
+                                product_id_import_standard = self.env['product.product'].search(
+                                    [('default_code', '=', val[0])]).product_tmpl_id.id
+                                standard_price = self.env['product.template'].search(
+                                    [('id', '=', product_id_import_standard)]
+                                ).standard_price
+                                self.env['purchase.order.line'].create(
+                                    {'price_unit': standard_price, 'product_qty': float(val[3]), 'order_id': amount,
+                                     'product_id': product_id_import})
+                                self.env.cr.commit()
+                            else:
+                                print('test5')
+                                self.env['purchase.order.line'].create(
+                                    {'price_unit': float(val[4]), 'product_qty': float(val[3]), 'order_id': amount,
+                                     'product_id': product_id_import})
+                                self.env.cr.commit()
                     elif not val[4]:
                         # lấy đơn giá rồi gán vào val[4]
                         product_id_import_standard = self.env['product.product'].search(
