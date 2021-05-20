@@ -143,25 +143,44 @@ class ImportXLS(models.TransientModel):
                             if not val[4]:
                                 if standard_price in price_unit_arr_exist:
                                     if uom_current in uom_unit_arr:
-                                    # có tồn tại, tìm dòng đó và ghi đè
+                                        # có tồn tại, tìm dòng đó và ghi đè
                                         for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
-                                            if rc_purchase_order_line_exist.price_unit == standard_price:
-                                                product_quanty = rc_purchase_order_line_exist.product_qty + float(
-                                                    val[3])
-                                                rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                            if rc_purchase_order_line_exist.product_uom.id == uom_current:
+                                                if rc_purchase_order_line_exist.price_unit == standard_price:
+                                                    product_quanty = rc_purchase_order_line_exist.product_qty + float(
+                                                        val[3])
+                                                    print('t')
+                                                    rc_purchase_order_line_exist.write({'product_qty': product_quanty})
                                     else:
+                                        print('t1')
                                         self.create_product(val, standard_price, amount, uom_current)
 
                                 else:
+                                    print('t2')
                                     self.create_product(val, standard_price, amount, uom_current)
 
                             elif float(val[4]) in price_unit_arr_exist:
-                                for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
-                                    if rc_purchase_order_line_exist.price_unit == float(val[4]):
-                                        product_quanty = rc_purchase_order_line_exist.product_qty + float(val[3])
-                                        rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                if uom_current in uom_unit_arr:
+                                    print('rc_purchase_order_line_exist_list', rc_purchase_order_line_exist_list)
+
+                                    for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
+                                        print(rc_purchase_order_line_exist.price_unit)
+                                        print(float(val[4]))
+                                        print('=====')
+                                        if rc_purchase_order_line_exist.product_uom.id == uom_current:
+                                            if rc_purchase_order_line_exist.price_unit == float(val[4]):
+                                                product_quanty = rc_purchase_order_line_exist.product_qty + float(val[3])
+                                                print('t3')
+                                                rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                    # print('t4')
+                                    # self.create_product(val, float(val[4]), amount, uom_current)
+                                else:
+                                    print('t5')
+                                    self.create_product(val, float(val[4]), amount, uom_current)
+
                             else:
-                                self.create_product(val, float(val[4]), amount, 2)
+                                print('t6')
+                                self.create_product(val, float(val[4]), amount, uom_current)
 
                         # nếu mã code không có trong file exel, tạo mới
                         else:
