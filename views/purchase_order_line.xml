@@ -19,10 +19,12 @@
                 <!--                    </page>-->
                 <!--                </notebook>-->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']" position="before">
+                    <div class="oe_edit_only">
                         <button name="import_xls" string="Import Excel" type="object" class="oe_highlight"
-                                style="background-color:red;"/>
+                                style="background-color:red;" states="draft"/>
                         <button name="get_contract_template" string="Sample file" type="object" icon="fa-download"
-                                style="background-color:blue;"/>
+                                style="background-color:blue;" states="draft"/>
+                    </div>
                 </xpath>
             </field>
         </record>

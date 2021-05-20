@@ -160,18 +160,32 @@ class ImportXLS(models.TransientModel):
                                     self.create_product(val, standard_price, amount, uom_current)
 
                             elif float(val[4]) in price_unit_arr_exist:
+                                # nếu đơn vị tính file excel có trong bảng chi tiết
                                 if uom_current in uom_unit_arr:
                                     print('rc_purchase_order_line_exist_list', rc_purchase_order_line_exist_list)
-
+                                    av = 0
                                     for rc_purchase_order_line_exist in rc_purchase_order_line_exist_list:
                                         print(rc_purchase_order_line_exist.price_unit)
                                         print(float(val[4]))
                                         print('=====')
-                                        if rc_purchase_order_line_exist.product_uom.id == uom_current:
-                                            if rc_purchase_order_line_exist.price_unit == float(val[4]):
-                                                product_quanty = rc_purchase_order_line_exist.product_qty + float(val[3])
-                                                print('t3')
-                                                rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                        if rc_purchase_order_line_exist.price_unit == float(
+                                                val[4]) and rc_purchase_order_line_exist.product_uom.id == uom_current:
+                                            # if rc_purchase_order_line_exist.product_uom.id == uom_current:
+                                            product_quanty = rc_purchase_order_line_exist.product_qty + float(
+                                                val[3])
+                                            print('t3')
+                                            rc_purchase_order_line_exist.write({'product_qty': product_quanty})
+                                        av += 1
+                                        # else:
+                                        #     self.create_product(val, float(val[4]), amount, uom_current)
+                                    if av > len(uom_unit_arr):
+                                        print('hh')
+                                        self.create_product(val, float(val[4]), amount, uom_current)
+                                    # if rc_purchase_order_line_exist.product_uom.id == uom_current:
+                                    #     if rc_purchase_order_line_exist.price_unit == float(val[4]):
+                                    #         product_quanty = rc_purchase_order_line_exist.product_qty + float(val[3])
+                                    #         print('t3')
+                                    #         rc_purchase_order_line_exist.write({'product_qty': product_quanty})
                                     # print('t4')
                                     # self.create_product(val, float(val[4]), amount, uom_current)
                                 else:
